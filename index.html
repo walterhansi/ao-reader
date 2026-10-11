@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Simple Reader</title>
+<title>ao Reader</title>
 <meta name="description" content="Einfacher, schneller E-Book-Reader für EPUB und PDF – offline, ohne Konto.">
-<meta name="theme-color" content="#1f6f6b">
+<meta name="theme-color" content="#FF8A00">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
@@ -42,7 +42,7 @@
 <!-- ============ BIBLIOTHEK ============ -->
 <main id="library" class="view">
   <header class="lib-head">
-    <div class="brand"><img src="icons/icon.svg" alt="" width="34" height="34"><span>Simple Reader</span></div>
+    <div class="brand"><img src="icons/icon.svg" alt="" width="40" height="40"><span class="brand-name">ao Reader</span></div>
     <div class="lib-actions">
       <button class="btn primary" id="btnImport"><svg><use href="#i-plus"/></svg><span>Buch importieren</span></button>
     </div>
@@ -51,6 +51,7 @@
   </header>
 
   <section class="hero">
+    <img class="hero-logo" src="icons/icon.svg" alt="" width="88" height="88">
     <p class="eyebrow">Deine Sammlung</p>
     <h1 id="heroTitle">Willkommen zurück</h1>
     <p class="hero-sub">Dein ruhiger Ort für Geschichten.</p>
@@ -189,12 +190,7 @@
     <section data-p="theme">
       <div class="field">
         <label>Farbschema</label>
-        <div class="swatches" data-key="theme">
-          <button data-v="light" class="sw sw-light" aria-label="Hell">Aa<small>Hell</small></button>
-          <button data-v="sepia" class="sw sw-sepia" aria-label="Sepia">Aa<small>Sepia</small></button>
-          <button data-v="dark" class="sw sw-dark" aria-label="Dunkel">Aa<small>Dunkel</small></button>
-          <button data-v="black" class="sw sw-black" aria-label="Schwarz">Aa<small>Schwarz</small></button>
-        </div>
+        <div class="swatches" data-key="theme" id="themeSwatches"></div>
       </div>
       <div class="field">
         <label for="brightness">Helligkeit</label>
@@ -272,7 +268,7 @@
   <div class="sheet-grip"></div>
   <div class="sheet-head"><h3>Welches Gerät ist das?</h3></div>
   <div class="sheet-body">
-    <p class="muted small" style="margin-top:0">Simple Reader merkt sich den Namen nur auf diesem Gerät. Er steht später im Dateinamen deiner Backups, damit du sie auseinanderhalten kannst.</p>
+    <p class="muted small" style="margin-top:0">ao Reader merkt sich den Namen nur auf diesem Gerät. Er steht später im Dateinamen deiner Backups, damit du sie auseinanderhalten kannst.</p>
     <div class="device-choices">
       <button data-dev="PC">PC</button>
       <button data-dev="Chromebook">Chromebook</button>

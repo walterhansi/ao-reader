@@ -79,10 +79,6 @@ input,select{font:inherit;color:inherit}
 
 /* ---------- Leseansicht ---------- */
 #reader{position:fixed;top:0;right:0;bottom:0;left:var(--content-left);background:var(--r-bg);color:var(--r-fg);overflow:hidden}
-#reader.t-light{--r-bg:#ffffff;--r-fg:#1b1b1b;--r-bar:rgba(255,255,255,.97);--r-line:#e6e2da;--r-muted:#7a756c}
-#reader.t-sepia{--r-bg:#f4ecd8;--r-fg:#3b2f1e;--r-bar:rgba(240,231,209,.97);--r-line:#ddd0b0;--r-muted:#7d6b4f}
-#reader.t-dark{--r-bg:#1d1e21;--r-fg:#d9d6cf;--r-bar:rgba(34,35,39,.97);--r-line:#34363b;--r-muted:#9a968e;color-scheme:dark}
-#reader.t-black{--r-bg:#000;--r-fg:#b9b7b2;--r-bar:rgba(14,14,14,.97);--r-line:#262626;--r-muted:#86847f;color-scheme:dark}
 .stage{position:absolute;left:env(safe-area-inset-left);right:env(safe-area-inset-right);top:calc(30px + env(safe-area-inset-top));bottom:calc(30px + env(safe-area-inset-bottom));overflow:hidden}
 .epub-frame{border:0;width:100%;height:100%;display:block;background:var(--r-bg)}
 .r-mini{position:absolute;left:0;right:0;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:.74rem;color:var(--r-muted);white-space:nowrap;overflow:hidden;pointer-events:none}
@@ -119,7 +115,7 @@ input,select{font:inherit;color:inherit}
 .pdf-wrap{position:absolute;inset:0;overflow:auto;touch-action:pan-x pan-y;outline:none;-webkit-overflow-scrolling:touch}
 .pdf-page{position:relative;margin:8px auto;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.18)}
 .pdf-page canvas{display:block}
-#reader.t-dark .pdf-page canvas,#reader.t-black .pdf-page canvas{filter:invert(.9) hue-rotate(180deg)}
+#reader.is-dark .pdf-page canvas{filter:invert(.9) hue-rotate(180deg)}
 #reader.t-sepia .pdf-page canvas{filter:sepia(.35) brightness(.97)}
 .textLayer{position:absolute;text-align:initial;inset:0;overflow:hidden;opacity:1;line-height:1;-webkit-text-size-adjust:none;text-size-adjust:none;forced-color-adjust:none;transform-origin:0 0;z-index:2}
 .textLayer :is(span,br){color:transparent;position:absolute;white-space:pre;cursor:text;transform-origin:0% 0%}
@@ -261,7 +257,8 @@ body.panel-push .panel{box-shadow:none}
 .field .hint{border:0;padding:6px 0 0}
 .panel #brightness{width:100%;max-width:none}
 .panel .swatches{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.panel .sw{width:auto;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:1.1rem}
+.panel .sw{width:auto;height:58px;border:2px solid rgba(128,128,128,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:1.1rem}
+.panel .sw.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .panel .sw small{font-family:var(--sans);font-size:.72rem;font-weight:600}
 .btn.wide{width:100%;justify-content:center;margin:2px 0 10px}
 .panel .menu{border-top:1px solid var(--line);margin-top:8px;padding-top:6px}
@@ -272,9 +269,6 @@ body.panel-push .panel{box-shadow:none}
 #reader.ui-hidden .side-arrow{opacity:0;pointer-events:none}
 @media (max-width:760px){.side-arrow{display:none}}
 @media (max-width:560px){:root{--rail:48px}.rail button{width:38px;height:38px}}
-body.reading.rt-sepia :is(.rail,.panel,.dict,.sheet,.toast){--surface:#efe6cf;--surface-2:#e5d9bc;--text:#3b2f1e;--muted:#7d6b4f;--line:#d8cba8;--bg:#f4ecd8}
-body.reading.rt-dark :is(.rail,.panel,.dict,.sheet){--surface:#24262a;--surface-2:#2f3136;--text:#e3e0d9;--muted:#9a968e;--line:#383a40;--accent:#5fb8b0;--accent-soft:#1f3735;--accent-ink:#0d1f1d;--bg:#1d1e21;color-scheme:dark}
-body.reading.rt-black :is(.rail,.panel,.dict,.sheet){--surface:#0b0b0b;--surface-2:#1b1b1b;--text:#cfcdc8;--muted:#86847f;--line:#262626;--accent:#5fb8b0;--accent-soft:#16302d;--accent-ink:#0d1f1d;--bg:#000;color-scheme:dark}
 body.eink .rail,body.eink .panel{border-right:2px solid #000;box-shadow:none}
 /* Lesen: Leiste liegt über dem Text und verschwindet beim Umblättern */
 body.reading{--content-left:0px}
@@ -286,12 +280,14 @@ body.reading:not(.rail-hidden):not(.panel-push) .side-arrow.left{left:calc(var(-
 body.reading:not(.rail-hidden):not(.panel-push) .r-mini{padding-left:calc(var(--rail) + 18px)}
 body:not(.reading) #btnRail{display:none}
 body.reading.rail-hidden .r-top{transform:translateY(-110%);opacity:0;pointer-events:none}
+.brand-name{font-family:Georgia,"Iowan Old Style",serif;font-weight:700}
+.hero-logo{display:block;margin-bottom:10px;filter:drop-shadow(0 4px 10px rgba(228,111,0,.25))}
+.eyebrow{color:#E46F00}
 /* E-Ink: keine Animationen, keine Schatten/Transparenz, harte Kontraste */
 body.eink *,body.eink *::before,body.eink *::after{animation:none!important;transition:none!important;backdrop-filter:none!important;box-shadow:none!important;text-shadow:none!important}
 body.eink{--muted:#333;--line:#000;--accent:#000;--accent-soft:#ddd;--surface-2:#eee}
 body.eink #reader{--r-muted:#222;--r-line:#000}
-body.eink #reader.t-light{--r-fg:#000;--r-bar:#fff}
-body.eink .r-bar{background:var(--r-bg)}
+body.eink body.eink .r-bar{background:var(--r-bg)}
 body.eink .scrim{background:transparent}
 body.eink .sheet,body.eink .drawer,body.eink .dict,body.eink .continue,body.eink .cover{border:2px solid #000}
 body.eink .scrub-bubble{background:#000;color:#fff}

@@ -606,9 +606,17 @@ ${recolor ? `body *:not(img):not(svg):not(svg *){color:inherit!important;backgro
   }
 }
 
+// Farbschemas wie im Vorbild (zeta reader), Farben dort ausgelesen
 export const THEMES = {
-  light: { bg: '#ffffff', fg: '#1b1b1b', link: '#1f6f6b', sel: 'rgba(31,111,107,.28)' },
-  sepia: { bg: '#f4ecd8', fg: '#3b2f1e', link: '#8a4b16', sel: 'rgba(138,75,22,.25)' },
-  dark: { bg: '#1d1e21', fg: '#d9d6cf', link: '#7fc7c0', sel: 'rgba(127,199,192,.3)' },
-  black: { bg: '#000000', fg: '#b9b7b2', link: '#7fc7c0', sel: 'rgba(127,199,192,.3)' },
+  light:     { name: 'Hell',             bg: '#ffffff', fg: '#333333', link: '#1f6f6b', dark: false },
+  sepia:     { name: 'Sepia',            bg: '#f4ecd8', fg: '#5b4636', link: '#8a4b16', dark: false },
+  dark:      { name: 'Dunkel',           bg: '#1a1a1a', fg: '#cccccc', link: '#7fc7c0', dark: true },
+  nightblue: { name: 'Nachtblau',        bg: '#111b21', fg: '#e4e5f1', link: '#8ab4f8', dark: true },
+  forest:    { name: 'Wald',             bg: '#2e3b33', fg: '#e8f5e9', link: '#a5d6a7', dark: true },
+  sollight:  { name: 'Solarized Hell',   bg: '#fdf6e3', fg: '#657b83', link: '#268bd2', dark: false },
+  soldark:   { name: 'Solarized Dunkel', bg: '#002b36', fg: '#839496', link: '#2aa198', dark: true },
+  nord:      { name: 'Nord',             bg: '#2e3440', fg: '#d8dee9', link: '#88c0d0', dark: true },
+  paper:     { name: 'Papier',           bg: '#f5f5f0', fg: '#2a2a2a', link: '#1f6f6b', dark: false },
+  lavender:  { name: 'Lavendel',         bg: '#f3e5f5', fg: '#4a148c', link: '#7b1fa2', dark: false },
 };
+for (const t of Object.values(THEMES)) t.sel = t.link + '55';

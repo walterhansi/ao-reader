@@ -1,5 +1,5 @@
 // IndexedDB-Speicher: books (Metadaten), files (Buchdateien), states (Lesestand, Lesezeichen)
-const DB_NAME = 'simple-reader';
+const DB_NAME = 'simple-reader'; // Name bewusst beibehalten: gleiche Herkunft → Bücher/Lesestand bleiben nach Umbenennung erhalten
 const DB_VERSION = 1;
 let dbPromise = null;
 

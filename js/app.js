@@ -1,9 +1,9 @@
 import { db } from './db.js';
 import { openZip, writeZip } from './zip.js';
-import { EpubView, epubMeta } from './epub.js';
+import { EpubView, epubMeta, THEMES } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
 
-const VERSION = '1.3.2';
+const VERSION = '1.4.0';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -351,14 +351,14 @@ async function exportBackup(withBooks) {
   const allBooks = await db.all('books');
   const allStates = await db.all('states');
   const data = {
-    app: 'simple-reader', format: 1, exported: new Date().toISOString(), device: getDevice(), settings,
+    app: 'ao-reader', format: 1, exported: new Date().toISOString(), device: getDevice(), settings,
     books: allBooks.map(({ cover, chars, ...b }) => b),
     states: allStates,
   };
   const day = new Date().toISOString().slice(0, 10);
   const dev = fileSafe(getDevice());
   if (!withBooks) {
-    download(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), `simple-reader-backup-${dev}-${day}.json`);
+    download(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), `ao-reader-backup-${dev}-${day}.json`);
     toast('Backup gespeichert (Downloads).');
     return;
   }
@@ -368,7 +368,7 @@ async function exportBackup(withBooks) {
     const blob = await db.get('files', b.id);
     if (blob) files.push({ name: `books/${b.id}.${b.type}`, data: new Uint8Array(await blob.arrayBuffer()) });
   }
-  download(writeZip(files), `simple-reader-komplett-${dev}-${day}.zip`);
+  download(writeZip(files), `ao-reader-komplett-${dev}-${day}.zip`);
   toast(`Backup mit ${allBooks.length} Büchern gespeichert (Downloads).`, 4000);
 }
 
@@ -380,7 +380,7 @@ async function importBackup(file) {
       zip = await openZip(file);
       data = JSON.parse(await zip.text('backup.json'));
     } else data = JSON.parse(await file.text());
-    if (data.app !== 'simple-reader') throw new Error('Keine Simple-Reader-Sicherung.');
+    if (data.app !== 'ao-reader' && data.app !== 'simple-reader') throw new Error('Keine ao-Reader-Sicherung.');
     let newBooks = 0, updated = 0;
     if (zip) {
       for (const b of data.books) {
@@ -440,7 +440,7 @@ async function openBook(id) {
   $('#rBookTitle').textContent = book.title;
   $('#rChapter').textContent = '';
   $('#loading').hidden = false;
-  document.title = book.title + ' – Simple Reader';
+  document.title = book.title + ' – ao Reader';
   if (location.hash !== '#lesen') history.pushState({ reading: id }, '', '#lesen');
 
   const stage = $('#stage');
@@ -482,7 +482,7 @@ async function closeReader() {
   if (['toc', 'search', 'marks'].includes(curPanel)) closePanel();
   $('#searchList').innerHTML = ''; $('#searchStatus').textContent = ''; $('#searchInput').value = '';
   $('#library').hidden = false;
-  document.title = 'Simple Reader';
+  document.title = 'ao Reader';
   releaseWakeLock();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   await loadLibrary();
@@ -490,15 +490,34 @@ async function closeReader() {
 $('#btnBack').addEventListener('click', () => { if (location.hash === '#lesen') history.back(); else closeReader(); });
 window.addEventListener('popstate', () => { if (view && location.hash !== '#lesen') closeReader(); });
 
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function mixHex(a, b, t) { const x = hexRgb(a), y = hexRgb(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
 function applyTheme() {
-  reader.classList.remove('t-light', 't-sepia', 't-dark', 't-black');
+  if (!THEMES[settings.theme]) { settings.theme = settings.theme === 'black' ? 'dark' : 'light'; saveSettings(); }
+  const th = THEMES[settings.theme];
+  reader.className = reader.className.replace(/\bt-\S+/g, '').trim();
   reader.classList.add('t-' + settings.theme);
-  document.body.classList.remove('rt-light', 'rt-sepia', 'rt-dark', 'rt-black');
-  document.body.classList.add('rt-' + settings.theme);
+  reader.classList.toggle('is-dark', th.dark);
+  const v = {
+    '--r-bg': th.bg, '--r-fg': th.fg, '--r-bar': th.bg + 'f7', '--r-line': mixHex(th.bg, th.fg, 0.15), '--r-muted': mixHex(th.bg, th.fg, 0.6),
+  };
+  for (const [k, val] of Object.entries(v)) reader.style.setProperty(k, val);
+  reader.style.colorScheme = th.dark ? 'dark' : 'light';
+  // Leiste, Seitenfeld & Dialoge beim Lesen im gleichen Farbschema
+  const surf = mixHex(th.bg, th.fg, th.dark ? 0.06 : 0.03);
+  const accent = th.dark ? '#5fb8b0' : '#1f6f6b';
+  let css = `body.reading :is(.rail,.panel,.dict,.sheet){--bg:${th.bg};--surface:${surf};--surface-2:${mixHex(th.bg, th.fg, 0.12)};--text:${th.fg};--muted:${mixHex(th.bg, th.fg, 0.6)};--line:${mixHex(th.bg, th.fg, 0.18)};--accent:${accent};--accent-soft:${mixHex(th.bg, accent, 0.2)};--accent-ink:${th.dark ? '#0d1f1d' : '#ffffff'};color-scheme:${th.dark ? 'dark' : 'light'}}`;
+  let st = document.getElementById('theme-vars');
+  if (!st) { st = document.createElement('style'); st.id = 'theme-vars'; document.head.appendChild(st); }
+  st.textContent = css;
   $('#dimmer').style.opacity = String((100 - settings.brightness) / 100);
-  const tc = { light: '#ffffff', sepia: '#f4ecd8', dark: '#1d1e21', black: '#000000' }[settings.theme];
-  $('meta[name=theme-color]').setAttribute('content', view || !reader.hidden ? tc : '#1f6f6b');
+  $('meta[name=theme-color]').setAttribute('content', view || !reader.hidden ? th.bg : '#FF8A00');
 }
+function buildSwatches() {
+  $('#themeSwatches').innerHTML = Object.entries(THEMES).map(([k, t]) =>
+    `<button data-v="${k}" class="sw" style="background:${t.bg};color:${t.fg}" aria-label="${t.name}"><b>Aa</b><small>${t.name}</small></button>`).join('');
+}
+buildSwatches();
 
 // Position & Fortschritt
 let saveT;

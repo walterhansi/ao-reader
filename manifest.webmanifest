@@ -1,6 +1,6 @@
 {
-  "name": "Simple Reader",
-  "short_name": "Simple Reader",
+  "name": "ao Reader",
+  "short_name": "ao Reader",
   "description": "Einfacher, schneller E-Book-Reader für EPUB und PDF – offline, ohne Konto.",
   "lang": "de",
   "id": "./",
@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f5f2ec",
-  "theme_color": "#1f6f6b",
+  "theme_color": "#FF8A00",
   "categories": ["books", "education", "productivity"],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
