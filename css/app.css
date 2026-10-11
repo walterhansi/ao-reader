@@ -276,6 +276,15 @@ body.reading.rt-sepia :is(.rail,.panel,.dict,.sheet,.toast){--surface:#efe6cf;--
 body.reading.rt-dark :is(.rail,.panel,.dict,.sheet){--surface:#24262a;--surface-2:#2f3136;--text:#e3e0d9;--muted:#9a968e;--line:#383a40;--accent:#5fb8b0;--accent-soft:#1f3735;--accent-ink:#0d1f1d;--bg:#1d1e21;color-scheme:dark}
 body.reading.rt-black :is(.rail,.panel,.dict,.sheet){--surface:#0b0b0b;--surface-2:#1b1b1b;--text:#cfcdc8;--muted:#86847f;--line:#262626;--accent:#5fb8b0;--accent-soft:#16302d;--accent-ink:#0d1f1d;--bg:#000;color-scheme:dark}
 body.eink .rail,body.eink .panel{border-right:2px solid #000;box-shadow:none}
+/* Lesen: Leiste liegt über dem Text und verschwindet beim Umblättern */
+body.reading{--content-left:0px}
+body.reading.panel-push{--content-left:calc(var(--rail) + var(--panel-w))}
+.rail{transition:transform .2s ease,opacity .2s ease}
+body.rail-hidden .rail{transform:translateX(-105%);opacity:0;pointer-events:none}
+body.reading:not(.rail-hidden):not(.panel-push) :is(.r-top,.r-bottom){padding-left:calc(var(--rail) + 10px)}
+body.reading:not(.rail-hidden):not(.panel-push) .side-arrow.left{left:calc(var(--rail) + 10px)}
+body.reading:not(.rail-hidden):not(.panel-push) .r-mini{padding-left:calc(var(--rail) + 18px)}
+body:not(.reading) #btnRail{display:none}
 /* E-Ink: keine Animationen, keine Schatten/Transparenz, harte Kontraste */
 body.eink *,body.eink *::before,body.eink *::after{animation:none!important;transition:none!important;backdrop-filter:none!important;box-shadow:none!important;text-shadow:none!important}
 body.eink{--muted:#333;--line:#000;--accent:#000;--accent-soft:#ddd;--surface-2:#eee}

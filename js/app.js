@@ -3,7 +3,7 @@ import { openZip, writeZip } from './zip.js';
 import { EpubView, epubMeta } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
 
-const VERSION = '1.3.0';
+const VERSION = '1.3.1';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -69,6 +69,13 @@ $('#scrim').addEventListener('click', () => {
 // ---------------- Menüleiste links + Seitenfeld (wie in der Vorlage) ----------------
 const PANEL_TITLES = { toc: 'Inhalt', search: 'Suche', marks: 'Lesezeichen', type: 'Schrift & Bilder', theme: 'Farben & Helligkeit', settings: 'Einstellungen' };
 let curPanel = null;
+// Leiste links blendet sich beim Lesen aus
+let railT = null, openedAt = 0;
+function setRail(show) { document.body.classList.toggle('rail-hidden', !show); }
+function scheduleRailHide(ms) {
+  clearTimeout(railT);
+  railT = setTimeout(() => { if (view && !curPanel && !openLayers.length) setRail(false); }, ms);
+}
 function wide() { return window.innerWidth >= 1000; }
 function openPanel(name) {
   if (name === 'library') {
@@ -79,6 +86,7 @@ function openPanel(name) {
   }
   if (['toc', 'search', 'marks'].includes(name) && !view) return;
   curPanel = name;
+  clearTimeout(railT); setRail(true);
   $('#panelTitle').textContent = PANEL_TITLES[name];
   $$('#panel [data-p]').forEach((sec) => { sec.hidden = sec.dataset.p !== name; });
   $$('#rail [data-panel]').forEach((b) => b.classList.toggle('active', b.dataset.panel === name));
@@ -93,6 +101,7 @@ function openPanel(name) {
 }
 function closePanel() {
   curPanel = null;
+  if (view) scheduleRailHide(2500);
   $('#panel').hidden = true;
   $$('#rail [data-panel]').forEach((b) => b.classList.remove('active'));
   document.body.classList.remove('panel-push');
@@ -426,6 +435,7 @@ async function openBook(id) {
   document.body.classList.toggle('reader-pdf', book.type === 'pdf');
   document.body.classList.toggle('reader-epub', book.type === 'epub');
   reader.classList.remove('ui-hidden');
+  setRail(true); openedAt = Date.now(); scheduleRailHide(4000);
   applyTheme();
   $('#rBookTitle').textContent = book.title;
   $('#rChapter').textContent = '';
@@ -455,7 +465,7 @@ async function openBook(id) {
   updateWakeLock();
   syncSettingsUi();
   try {
-    if (!localStorage.getItem('sr-hint-aa')) { localStorage.setItem('sr-hint-aa', '1'); toast('Tipp: Die Leiste links öffnet Inhalt, Suche, Lesezeichen, Schrift & Bilder, Farben und Einstellungen.', 7000); }
+    if (!localStorage.getItem('sr-hint-aa')) { localStorage.setItem('sr-hint-aa', '1'); toast('Tipp: Die Menüleiste links verschwindet beim Umblättern. Zurückholen: in die Bildmitte tippen oder oben links auf ☰.', 7000); }
   } catch {}
 }
 
@@ -467,6 +477,7 @@ async function closeReader() {
   if (view) { view.destroy(); view = null; }
   cur = null;
   reader.hidden = true;
+  clearTimeout(railT); setRail(true);
   document.body.classList.remove('reader-epub', 'reader-pdf', 'reading');
   if (['toc', 'search', 'marks'].includes(curPanel)) closePanel();
   $('#searchList').innerHTML = ''; $('#searchStatus').textContent = ''; $('#searchInput').value = '';
@@ -493,6 +504,7 @@ function applyTheme() {
 let saveT;
 function onRelocate() {
   if (!view) return;
+  if (!curPanel && Date.now() - openedAt > 1500) { clearTimeout(railT); setRail(false); }
   const inf = view.info();
   $('#rChapter').textContent = inf.chapter && inf.chapter !== cur.title ? inf.chapter : (cur.author || '');
   $('#miniTitle').textContent = cur.type === 'pdf' ? cur.title : inf.chapter;
@@ -523,8 +535,16 @@ window.addEventListener('pagehide', savePosNow);
 function toggleUi() {
   if (curPanel && !wide()) { closePanel(); return; }
   if (openLayers.includes('dict')) { closeLayer('dict'); return; }
-  reader.classList.toggle('ui-hidden');
+  const hidden = reader.classList.contains('ui-hidden') || document.body.classList.contains('rail-hidden');
+  clearTimeout(railT);
+  reader.classList.toggle('ui-hidden', !hidden);
+  setRail(hidden);
 }
+$('#btnRail').addEventListener('click', () => {
+  const show = document.body.classList.contains('rail-hidden');
+  clearTimeout(railT); setRail(show);
+  if (!show && curPanel) closePanel();
+});
 $('#btnPrev').addEventListener('click', () => view && view.prev());
 $('#btnPrevSide').addEventListener('click', () => view && view.prev());
 $('#btnNextSide').addEventListener('click', () => view && view.next());
@@ -536,7 +556,7 @@ $('#btnFull').addEventListener('click', () => {
 function onKey(e) {
   if (!view) return;
   if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName) && e.target.type !== 'range') return;
-  if (e.key === 'Escape') { if (openLayers.length) closeLayer(openLayers[openLayers.length - 1]); else if (curPanel) closePanel(); else reader.classList.toggle('ui-hidden'); return; }
+  if (e.key === 'Escape') { if (openLayers.length) closeLayer(openLayers[openLayers.length - 1]); else if (curPanel) closePanel(); else toggleUi(); return; }
   if (openLayers.includes('lightbox')) return;
   const pdf = cur.type === 'pdf';
   switch (e.key) {
