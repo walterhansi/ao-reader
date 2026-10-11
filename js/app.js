@@ -3,7 +3,7 @@ import { openZip, writeZip } from './zip.js';
 import { EpubView, epubMeta } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
 
-const VERSION = '1.3.1';
+const VERSION = '1.3.2';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -465,7 +465,7 @@ async function openBook(id) {
   updateWakeLock();
   syncSettingsUi();
   try {
-    if (!localStorage.getItem('sr-hint-aa')) { localStorage.setItem('sr-hint-aa', '1'); toast('Tipp: Die Menüleiste links verschwindet beim Umblättern. Zurückholen: in die Bildmitte tippen oder oben links auf ☰.', 7000); }
+    if (!localStorage.getItem('sr-hint-aa')) { localStorage.setItem('sr-hint-aa', '1'); toast('Tipp: Menüleiste links und Kopfleiste verschwinden beim Umblättern. Zurückholen: in die Bildmitte tippen.', 7000); }
   } catch {}
 }
 

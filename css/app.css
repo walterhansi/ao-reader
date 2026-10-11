@@ -285,6 +285,7 @@ body.reading:not(.rail-hidden):not(.panel-push) :is(.r-top,.r-bottom){padding-le
 body.reading:not(.rail-hidden):not(.panel-push) .side-arrow.left{left:calc(var(--rail) + 10px)}
 body.reading:not(.rail-hidden):not(.panel-push) .r-mini{padding-left:calc(var(--rail) + 18px)}
 body:not(.reading) #btnRail{display:none}
+body.reading.rail-hidden .r-top{transform:translateY(-110%);opacity:0;pointer-events:none}
 /* E-Ink: keine Animationen, keine Schatten/Transparenz, harte Kontraste */
 body.eink *,body.eink *::before,body.eink *::after{animation:none!important;transition:none!important;backdrop-filter:none!important;box-shadow:none!important;text-shadow:none!important}
 body.eink{--muted:#333;--line:#000;--accent:#000;--accent-soft:#ddd;--surface-2:#eee}

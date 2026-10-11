@@ -1,5 +1,5 @@
 // Service Worker: offline-fähig + Empfang geteilter Dateien (Android „Teilen“)
-const CACHE = 'simple-reader-v1.3.1';
+const CACHE = 'simple-reader-v1.3.2';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
   './js/app.js', './js/db.js', './js/zip.js', './js/epub.js', './js/pdf.js',
