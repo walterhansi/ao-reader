@@ -241,14 +241,14 @@
 
 <!-- ============ BILD-LUPE ============ -->
 <div id="lightbox" class="lightbox" hidden>
-  <div class="lb-stage" id="lbStage"><img id="lbImg" alt="Bild aus dem Buch"></div>
+  <div class="lb-stage" id="lbStage"><div class="lb-inner" id="lbInner"><img id="lbImg" alt="Bild aus dem Buch"></div></div>
+  <button class="lb-close" id="lbClose" aria-label="Bild schließen" title="Schließen">×</button>
   <div class="lb-bar">
-    <button class="icon-btn" id="lbOut" aria-label="verkleinern"><svg><use href="#i-minus"/></svg></button>
+    <button id="lbOut" aria-label="verkleinern">−</button>
     <output id="lbPct">100 %</output>
-    <button class="icon-btn" id="lbIn" aria-label="vergrößern"><svg><use href="#i-plus"/></svg></button>
-    <button class="btn ghost" id="lbFit">Einpassen</button>
-    <button class="btn ghost" id="lb100">100 %</button>
-    <button class="icon-btn" data-close="lightbox" aria-label="Schließen"><svg><use href="#i-x"/></svg></button>
+    <button id="lbIn" aria-label="vergrößern">+</button>
+    <button id="lbFit">Einpassen</button>
+    <button id="lbBack">Zurück zum Buch</button>
   </div>
 </div>
 

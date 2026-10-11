@@ -1,5 +1,5 @@
 // Service Worker: offline-fähig + Empfang geteilter Dateien (Android „Teilen“)
-const CACHE = 'ao-reader-v1.4.0';
+const CACHE = 'ao-reader-v1.4.1';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
   './js/app.js', './js/db.js', './js/zip.js', './js/epub.js', './js/pdf.js',
