@@ -1,0 +1,40 @@
+{
+  "name": "Simple Reader",
+  "short_name": "Simple Reader",
+  "description": "Einfacher, schneller E-Book-Reader für EPUB und PDF – offline, ohne Konto.",
+  "lang": "de",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f2ec",
+  "theme_color": "#1f6f6b",
+  "categories": ["books", "education", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "application/epub+zip": [".epub"],
+        "application/pdf": [".pdf"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "./share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        { "name": "books", "accept": ["application/epub+zip", ".epub", "application/pdf", ".pdf"] }
+      ]
+    }
+  },
+  "launch_handler": { "client_mode": "focus-existing" }
+}

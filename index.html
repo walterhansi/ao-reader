@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simple Reader</title>
+<meta name="description" content="Einfacher, schneller E-Book-Reader für EPUB und PDF – offline, ohne Konto.">
+<meta name="theme-color" content="#1f6f6b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-toc" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+    <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V5h11v2M9.5 5v14M7 19h5M14 13v-1.5h7V13M17.5 11.5V19M16 19h3"/></symbol>
+    <symbol id="i-full" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+    <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ BIBLIOTHEK ============ -->
+<main id="library" class="view">
+  <header class="lib-head">
+    <div class="brand"><img src="icons/icon.svg" alt="" width="34" height="34"><span>Simple Reader</span></div>
+    <div class="lib-actions">
+      <button class="btn primary" id="btnImport"><svg><use href="#i-plus"/></svg><span>Buch importieren</span></button>
+    </div>
+    <input type="file" id="fileInput" accept=".epub,.pdf,application/epub+zip,application/pdf" multiple hidden>
+    <input type="file" id="backupInput" accept=".zip,.json,application/zip,application/json" hidden>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow">Deine Sammlung</p>
+    <h1 id="heroTitle">Willkommen zurück</h1>
+    <p class="hero-sub">Dein ruhiger Ort für Geschichten.</p>
+    <div id="continueCard" class="continue" hidden></div>
+  </section>
+
+  <section class="shelf">
+    <div class="shelf-head">
+      <h2>Alle Bücher <span id="bookCount" class="count">0</span></h2>
+      <div class="shelf-tools">
+        <input type="search" id="libSearch" placeholder="Titel oder Autor suchen" aria-label="Bibliothek durchsuchen">
+        <select id="libSort" aria-label="Sortierung">
+          <option value="recent">Zuletzt gelesen</option>
+          <option value="added">Neueste zuerst</option>
+          <option value="title">Titel A–Z</option>
+          <option value="author">Autor A–Z</option>
+          <option value="progress">Fortschritt</option>
+        </select>
+      </div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" hidden>
+      <svg><use href="#i-book"/></svg>
+      <h3>Noch keine Bücher</h3>
+      <p>Tippe auf „Buch importieren“ oder ziehe EPUB- und PDF-Dateien hierher.</p>
+    </div>
+  </section>
+  <div id="dropHint" class="drop-hint" hidden>Dateien loslassen zum Importieren</div>
+</main>
+
+<!-- ============ LESEANSICHT ============ -->
+<section id="reader" class="view" hidden>
+  <div class="r-mini r-mini-top"><span id="miniTitle"></span></div>
+  <div id="stage" class="stage"></div>
+  <div class="r-mini r-mini-bottom"><span id="miniLeft"></span><span id="miniRight"></span></div>
+  <div id="dimmer" class="dimmer"></div>
+
+  <header id="rTop" class="r-bar r-top">
+    <button class="icon-btn round" id="btnBack" title="Zur Bibliothek" aria-label="Zur Bibliothek"><svg><use href="#i-back"/></svg></button>
+    <div class="r-title"><strong id="rBookTitle"></strong><span id="rChapter"></span></div>
+    <button class="icon-btn round" id="btnMark" title="Lesezeichen setzen/entfernen" aria-label="Lesezeichen setzen"><svg><use href="#i-bookmark"/></svg></button>
+    <button class="icon-btn round hide-sm" id="btnFull" title="Vollbild" aria-label="Vollbild"><svg><use href="#i-full"/></svg></button>
+  </header>
+
+  <button class="side-arrow left" id="btnPrevSide" title="Zurückblättern" aria-label="Zurückblättern"><svg><use href="#i-chev-l"/></svg></button>
+  <button class="side-arrow right" id="btnNextSide" title="Weiterblättern" aria-label="Weiterblättern"><svg><use href="#i-chev-r"/></svg></button>
+
+  <footer id="rBottom" class="r-bar r-bottom">
+    <button class="icon-btn" id="btnPrev" aria-label="Zurückblättern"><svg><use href="#i-chev-l"/></svg></button>
+    <div class="scrub">
+      <div id="scrubBubble" class="scrub-bubble" hidden><strong></strong><span></span></div>
+      <input type="range" id="scrub" min="0" max="1000" step="1" value="0" aria-label="Position im Buch">
+      <div class="scrub-labels"><span id="lblLeft"></span><span id="lblRight"></span></div>
+    </div>
+    <button class="icon-btn" id="btnNext" aria-label="Weiterblättern"><svg><use href="#i-chev-r"/></svg></button>
+  </footer>
+
+  <div id="loading" class="loading" hidden><div class="spinner"></div><p>Buch wird geöffnet …</p></div>
+</section>
+
+<!-- ============ MENÜLEISTE LINKS ============ -->
+<nav id="rail" class="rail" aria-label="Menüleiste">
+  <div class="rail-group">
+    <button data-panel="library" class="lib-rail" title="Bibliothek" aria-label="Bibliothek"><svg><use href="#i-book"/></svg></button>
+    <button data-panel="toc" class="reader-rail" title="Inhalt" aria-label="Inhalt"><svg><use href="#i-toc"/></svg></button>
+    <button data-panel="search" class="reader-rail" title="Im Buch suchen" aria-label="Im Buch suchen"><svg><use href="#i-search"/></svg></button>
+    <button data-panel="marks" class="reader-rail" title="Lesezeichen" aria-label="Lesezeichen"><svg><use href="#i-bookmark"/></svg></button>
+  </div>
+  <div class="rail-group">
+    <button data-panel="type" title="Schrift &amp; Bilder" aria-label="Schrift und Bilder"><svg><use href="#i-text"/></svg></button>
+    <button data-panel="theme" title="Farben &amp; Helligkeit" aria-label="Farben und Helligkeit"><svg><use href="#i-sun"/></svg></button>
+    <button data-panel="settings" title="Einstellungen &amp; Backup" aria-label="Einstellungen und Backup"><svg><use href="#i-gear"/></svg></button>
+  </div>
+</nav>
+
+<aside id="panel" class="panel" hidden>
+  <div class="panel-head"><h3 id="panelTitle"></h3><button class="icon-btn sm" id="panelClose" aria-label="Schließen"><svg><use href="#i-x"/></svg></button></div>
+  <div class="panel-body">
+
+    <section data-p="toc"><ul id="tocList" class="toc"></ul></section>
+
+    <section data-p="search">
+      <form id="searchForm" class="search-form"><input type="search" id="searchInput" placeholder="Wort oder Satz suchen" enterkeyhint="search"><button class="btn primary" type="submit">Suchen</button></form>
+      <div id="searchStatus" class="muted small"></div>
+      <ul id="searchList" class="results"></ul>
+    </section>
+
+    <section data-p="marks">
+      <button class="btn primary wide" id="btnMarkPanel"><svg><use href="#i-bookmark"/></svg><span id="markPanelLbl">Lesezeichen für diese Seite</span></button>
+      <ul id="markList" class="marks"></ul>
+    </section>
+
+    <section data-p="type">
+      <p class="hint lib-only">Gilt für alle Bücher auf diesem Gerät. Schrift, Bilder und Spalten betreffen EPUBs, Zoom betrifft PDFs.</p>
+      <div class="field only-epub">
+        <label>Schriftgröße</label>
+        <div class="stepper" data-key="fontSize" data-min="60" data-max="250" data-step="5"><button data-d="-1" aria-label="kleiner"><svg><use href="#i-minus"/></svg></button><output></output><button data-d="1" aria-label="größer"><svg><use href="#i-plus"/></svg></button></div>
+      </div>
+      <div class="field only-epub">
+        <label>Bildgröße</label>
+        <div class="stepper" data-key="imageScale" data-min="30" data-max="200" data-step="10"><button data-d="-1" aria-label="kleiner"><svg><use href="#i-minus"/></svg></button><output></output><button data-d="1" aria-label="größer"><svg><use href="#i-plus"/></svg></button></div>
+        <p class="hint">Bild antippen öffnet es groß – dort 25 bis 400 %.</p>
+      </div>
+      <div class="field only-pdf">
+        <label>Zoom</label>
+        <div class="stepper" id="pdfZoomStepper"><button data-zd="-1" aria-label="verkleinern"><svg><use href="#i-minus"/></svg></button><output id="pdfZoomOut"></output><button data-zd="1" aria-label="vergrößern"><svg><use href="#i-plus"/></svg></button></div>
+      </div>
+      <div class="field only-pdf">
+        <label>Anpassen</label>
+        <div class="seg" data-key="pdfZoom"><button data-v="width">Seitenbreite</button><button data-v="page">Ganze Seite</button><button data-v="100">100 %</button></div>
+      </div>
+      <div class="field only-epub">
+        <label>Schriftart</label>
+        <div class="seg" data-key="font"><button data-v="orig">Original</button><button data-v="serif" style="font-family:Georgia,serif">Serif</button><button data-v="sans" style="font-family:system-ui,sans-serif">Sans</button><button data-v="mono" style="font-family:monospace">Mono</button></div>
+      </div>
+      <div class="field only-epub">
+        <label>Zeilenabstand</label>
+        <div class="seg" data-key="lineHeight"><button data-v="orig">Original</button><button data-v="1.3">Eng</button><button data-v="1.55">Mittel</button><button data-v="1.85">Weit</button></div>
+      </div>
+      <div class="field only-epub">
+        <label>Spalten</label>
+        <div class="seg" data-key="columns"><button data-v="auto">Auto</button><button data-v="1">Eine</button><button data-v="2">Zwei</button></div>
+      </div>
+      <div class="field only-epub">
+        <label>Ränder</label>
+        <div class="seg" data-key="margin"><button data-v="s">Schmal</button><button data-v="m">Mittel</button><button data-v="l">Breit</button></div>
+      </div>
+      <div class="field only-epub">
+        <label>Ausrichtung</label>
+        <div class="seg" data-key="align"><button data-v="orig">Original</button><button data-v="left">Links</button><button data-v="justify">Blocksatz</button></div>
+      </div>
+      <div class="field only-epub"><label class="switch"><input type="checkbox" data-key="hyphens"><span></span>Silbentrennung</label></div>
+    </section>
+
+    <section data-p="theme">
+      <div class="field">
+        <label>Farbschema</label>
+        <div class="swatches" data-key="theme">
+          <button data-v="light" class="sw sw-light" aria-label="Hell">Aa<small>Hell</small></button>
+          <button data-v="sepia" class="sw sw-sepia" aria-label="Sepia">Aa<small>Sepia</small></button>
+          <button data-v="dark" class="sw sw-dark" aria-label="Dunkel">Aa<small>Dunkel</small></button>
+          <button data-v="black" class="sw sw-black" aria-label="Schwarz">Aa<small>Schwarz</small></button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="brightness">Helligkeit</label>
+        <input type="range" id="brightness" min="35" max="100" step="5">
+      </div>
+      <div class="field"><label class="switch"><input type="checkbox" data-key="eink"><span></span>E-Ink-Modus</label>
+        <p class="hint">Für E-Book-Reader: keine Animationen, reines Schwarz auf Weiß.</p></div>
+    </section>
+
+    <section data-p="settings">
+      <div class="field"><label class="switch"><input type="checkbox" data-key="keepAwake"><span></span>Bildschirm anlassen</label></div>
+      <div class="field">
+        <label for="targetLang">Übersetzen nach</label>
+        <select id="targetLang">
+          <option value="de">Deutsch</option><option value="en">Englisch</option><option value="fr">Französisch</option>
+          <option value="es">Spanisch</option><option value="it">Italienisch</option><option value="nl">Niederländisch</option>
+          <option value="pl">Polnisch</option><option value="tr">Türkisch</option>
+        </select>
+      </div>
+      <div class="menu">
+        <button id="mDevice"><svg><use href="#i-gear"/></svg><span><strong>Gerät: <span id="deviceName"></span></strong><small>Ändern – steht im Namen deiner Backups</small></span></button>
+        <button id="mExportData"><svg><use href="#i-download"/></svg><span><strong>Backup exportieren</strong><small>Lesestand, Lesezeichen, Einstellungen</small></span></button>
+        <button id="mExportAll"><svg><use href="#i-download"/></svg><span><strong>Backup inkl. Bücher</strong><small>Alles in einer ZIP-Datei</small></span></button>
+        <button id="mImport"><svg><use href="#i-upload"/></svg><span><strong>Backup importieren</strong><small>.json oder .zip</small></span></button>
+      </div>
+      <div class="about">
+        <p id="storageInfo" class="muted small"></p>
+        <p class="muted small">Alle Bücher bleiben auf diesem Gerät. Keine Anmeldung, keine Cloud. Nachschlagen öffnet externe Seiten und braucht Internet.</p>
+        <p class="muted small">Version <span id="appVersion"></span> · PDF-Darstellung: pdf.js (Mozilla, Apache-2.0)</p>
+      </div>
+    </section>
+  </div>
+</aside>
+
+<!-- ============ NACHSCHLAGEN ============ -->
+<div id="dict" class="dict" hidden>
+  <div class="dict-head"><strong id="dictWord"></strong><button class="icon-btn sm" data-close="dict" aria-label="Schließen"><svg><use href="#i-x"/></svg></button></div>
+  <div id="dictBody" class="dict-body"></div>
+  <div class="dict-actions">
+    <button data-look="wiktionary">Wiktionary</button>
+    <button data-look="duden">Duden</button>
+    <button data-look="wikipedia">Wikipedia</button>
+    <button data-look="deepl">DeepL</button>
+    <button data-look="google">Google Übersetzer</button>
+    <button data-look="copy"><svg><use href="#i-copy"/></svg>Kopieren</button>
+  </div>
+</div>
+
+<!-- ============ BILD-LUPE ============ -->
+<div id="lightbox" class="lightbox" hidden>
+  <div class="lb-stage" id="lbStage"><img id="lbImg" alt="Bild aus dem Buch"></div>
+  <div class="lb-bar">
+    <button class="icon-btn" id="lbOut" aria-label="verkleinern"><svg><use href="#i-minus"/></svg></button>
+    <output id="lbPct">100 %</output>
+    <button class="icon-btn" id="lbIn" aria-label="vergrößern"><svg><use href="#i-plus"/></svg></button>
+    <button class="btn ghost" id="lbFit">Einpassen</button>
+    <button class="btn ghost" id="lb100">100 %</button>
+    <button class="icon-btn" data-close="lightbox" aria-label="Schließen"><svg><use href="#i-x"/></svg></button>
+  </div>
+</div>
+
+<!-- ============ DIALOGE ============ -->
+<div id="bookMenu" class="sheet small" hidden>
+  <div class="sheet-grip"></div>
+  <div class="sheet-head"><h3 id="bmTitle"></h3><button class="icon-btn" data-close="bookMenu" aria-label="Schließen"><svg><use href="#i-x"/></svg></button></div>
+  <div class="sheet-body menu">
+    <p id="bmInfo" class="muted small"></p>
+    <button id="bmOpen"><svg><use href="#i-book"/></svg><span><strong>Lesen</strong></span></button>
+    <button id="bmReset"><svg><use href="#i-back"/></svg><span><strong>Fortschritt zurücksetzen</strong><small>Zurück an den Anfang</small></span></button>
+    <button id="bmDelete" class="danger"><svg><use href="#i-trash"/></svg><span><strong>Aus der Bibliothek löschen</strong></span></button>
+  </div>
+</div>
+
+<div id="deviceSheet" class="sheet small" hidden>
+  <div class="sheet-grip"></div>
+  <div class="sheet-head"><h3>Welches Gerät ist das?</h3></div>
+  <div class="sheet-body">
+    <p class="muted small" style="margin-top:0">Simple Reader merkt sich den Namen nur auf diesem Gerät. Er steht später im Dateinamen deiner Backups, damit du sie auseinanderhalten kannst.</p>
+    <div class="device-choices">
+      <button data-dev="PC">PC</button>
+      <button data-dev="Chromebook">Chromebook</button>
+      <button data-dev="Tablet">Tablet</button>
+      <button data-dev="Huawei-Reader">Huawei E-Reader</button>
+      <button data-dev="Handy">Handy</button>
+    </div>
+    <form id="deviceForm" class="search-form" style="padding:12px 0 0">
+      <input id="deviceInput" maxlength="30" placeholder="Oder eigener Name, z. B. Tablet Wohnzimmer" aria-label="Eigener Gerätename">
+      <button class="btn primary" type="submit">Speichern</button>
+    </form>
+  </div>
+</div>
+
+<div id="scrim" class="scrim" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
