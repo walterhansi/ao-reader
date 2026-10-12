@@ -1,33 +1,74 @@
 // PDF-Ansicht auf Basis von pdf.js (wird erst beim Öffnen eines PDFs geladen)
-const BASE = new URL('../lib/pdfjs/', import.meta.url).href;
-let libPromise = null;
+const BASE = new URL('../lib/pdfjs/', import.meta.url).href;       // pdf.js 3.11 (moderne Browser)
+const BASE_OLD = new URL('../lib/pdfjs2/', import.meta.url).href;  // pdf.js 2.16 (ältere Browser, z. B. E-Book-Reader)
+const libs = {};
 
-export function loadPdfLib() {
-  if (!libPromise) {
-    libPromise = new Promise((resolve, reject) => {
+// Kann der Browser pdf.js 3.11? (braucht etwa Chromium 92+)
+function modernOk() {
+  try {
+    if (typeof [].at !== 'function') return false;
+    // logische Zuweisung + private Methoden/Felder
+    new Function('let a = null; a ||= 1; class X { #b = 1; static #c() { return 1; } m() { return this.#b; } } return new X().m();')();
+    return true;
+  } catch { return false; }
+}
+let useOld = false;
+try { useOld = localStorage.getItem('sr-pdfjs') === '2'; } catch {}
+if (!useOld && !document.getElementById('sr-pdfjs') && !modernOk()) useOld = true;
+
+function loadScriptLib(key, src, workerSrc) {
+  if (!libs[key]) {
+    libs[key] = new Promise((resolve, reject) => {
+      const prev = window.pdfjsLib;
       const s = document.createElement('script');
-      const inline = document.getElementById('sr-pdfjs');
-      s.src = inline ? URL.createObjectURL(new Blob([inline.textContent], { type: 'text/javascript' })) : BASE + 'pdf.js';
+      s.src = src;
       s.onload = () => {
         const lib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
-        const w = document.getElementById('sr-pdfworker');
-        lib.GlobalWorkerOptions.workerSrc = w ? URL.createObjectURL(new Blob([w.textContent], { type: 'text/javascript' })) : BASE + 'pdf.worker.js';
+        if (!lib) { reject(new Error('PDF-Modul konnte nicht geladen werden.')); return; }
+        lib.GlobalWorkerOptions.workerSrc = workerSrc;
+        lib.__old = key === 'old';
+        if (prev && prev !== lib) window.pdfjsLib = lib;
         resolve(lib);
       };
       s.onerror = () => reject(new Error('PDF-Modul konnte nicht geladen werden.'));
       document.head.appendChild(s);
     });
   }
-  return libPromise;
+  return libs[key];
+}
+
+export function loadPdfLib() {
+  if (useOld) return loadScriptLib('old', BASE_OLD + 'pdf.js', BASE_OLD + 'pdf.worker.js');
+  const inline = document.getElementById('sr-pdfjs');
+  if (inline) {
+    const w = document.getElementById('sr-pdfworker');
+    return loadScriptLib('inline', URL.createObjectURL(new Blob([inline.textContent], { type: 'text/javascript' })),
+      URL.createObjectURL(new Blob([w.textContent], { type: 'text/javascript' })));
+  }
+  return loadScriptLib('new', BASE + 'pdf.js', BASE + 'pdf.worker.js');
 }
 
 async function openDoc(blob) {
-  const lib = await loadPdfLib();
-  const data = new Uint8Array(await blob.arrayBuffer());
-  const single = !!document.getElementById('sr-pdfjs');
-  const opts = { data, isEvalSupported: false };
-  if (!single) Object.assign(opts, { cMapUrl: BASE + 'cmaps/', cMapPacked: true, standardFontDataUrl: BASE + 'standard_fonts/' });
-  return lib.getDocument(opts).promise;
+  const buf = await blob.arrayBuffer();
+  const attempt = async () => {
+    const lib = await loadPdfLib();
+    const single = !!document.getElementById('sr-pdfjs') && !useOld;
+    const opts = { data: new Uint8Array(buf.slice(0)), isEvalSupported: false };
+    if (!single) Object.assign(opts, { cMapUrl: BASE + 'cmaps/', cMapPacked: true, standardFontDataUrl: BASE + 'standard_fonts/' });
+    return lib.getDocument(opts).promise;
+  };
+  try {
+    return await attempt();
+  } catch (e) {
+    const msg = String((e && e.message) || e);
+    // Neuer PDF-Kern läuft nicht (z. B. alter Browser): einmalig auf die ältere Version umschalten
+    if (!useOld && /worker|WorkerMessageHandler|Unexpected token|is not a function|is not defined|private/i.test(msg)) {
+      useOld = true;
+      try { localStorage.setItem('sr-pdfjs', '2'); } catch {}
+      return attempt();
+    }
+    throw e;
+  }
 }
 
 export async function pdfMeta(blob, fileName) {
@@ -65,8 +106,8 @@ export class PdfView {
   }
 
   async open(pos) {
-    this.lib = await loadPdfLib();
     this.pdf = await openDoc(this.blob);
+    this.lib = await loadPdfLib(); // nach openDoc: evtl. auf ältere Version umgeschaltet
     this.n = this.pdf.numPages;
     this.wrap = document.createElement('div');
     this.wrap.className = 'pdf-wrap';
@@ -129,7 +170,9 @@ export class PdfView {
     this.wrap.scrollTop = keepScroll ? scrollTop : 0;
     this.ev.relocate && this.ev.relocate();
     try {
-      const t = this.lib.renderTextLayer({ textContentSource: page.streamTextContent(), container: tl, viewport: vp, textDivs: [] });
+      const t = this.lib.__old
+        ? this.lib.renderTextLayer({ textContentStream: page.streamTextContent(), container: tl, viewport: vp, textDivs: [] })
+        : this.lib.renderTextLayer({ textContentSource: page.streamTextContent(), container: tl, viewport: vp, textDivs: [] });
       await t.promise;
       if (this.term) this.markTerm(tl);
     } catch (e) { console.warn('textLayer', e); }

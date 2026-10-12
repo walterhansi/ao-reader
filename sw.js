@@ -1,9 +1,9 @@
 // Service Worker: offline-fähig + Empfang geteilter Dateien (Android „Teilen“)
-const CACHE = 'ao-reader-v1.5.2';
+const CACHE = 'ao-reader-v1.5.3';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
   './js/app.js', './js/compat.js', './js/db.js', './js/zip.js', './js/epub.js', './js/pdf.js',
-  './lib/pdfjs/pdf.js', './lib/pdfjs/pdf.worker.js',
+  './lib/pdfjs/pdf.js', './lib/pdfjs/pdf.worker.js', './lib/pdfjs2/pdf.js', './lib/pdfjs2/pdf.worker.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
 ];
 
