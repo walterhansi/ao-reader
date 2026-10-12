@@ -4,7 +4,7 @@ import { openZip, writeZip } from './zip.js';
 import { EpubView, epubMeta, THEMES } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
 
-const VERSION = '1.5.1';
+const VERSION = '1.5.2';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -404,6 +404,15 @@ window.aoBack = () => {
   return false;
 };
 
+function cssToHex(c) {
+  const m = String(c).match(/\d+(\.\d+)?/g);
+  if (!m || m.length < 3) return '#ffffff';
+  return '#' + m.slice(0, 3).map((v) => Math.round(+v).toString(16).padStart(2, '0')).join('');
+}
+function androidBg(color) {
+  if (android && typeof android.setBackground === 'function') { try { android.setBackground(color); } catch {} }
+}
+
 function download(blob, name) {
   if (android) { androidSave(blob, name); return; }
   const a = document.createElement('a');
@@ -546,7 +555,7 @@ async function closeReader() {
   reader.hidden = true;
   clearTimeout(railT); setRail(true);
   document.body.classList.remove('reader-epub', 'reader-pdf', 'reading');
-  if (android) { android.setReading(false); android.keepScreenOn(false); }
+  if (android) { android.setReading(false); android.keepScreenOn(false); androidBg(cssToHex(getComputedStyle(document.body).backgroundColor)); }
   if (['toc', 'search', 'marks'].includes(curPanel)) closePanel();
   $('#searchList').innerHTML = ''; $('#searchStatus').textContent = ''; $('#searchInput').value = '';
   $('#library').hidden = false;
@@ -580,6 +589,7 @@ function applyTheme() {
   st.textContent = css;
   $('#dimmer').style.opacity = String((100 - settings.brightness) / 100);
   $('meta[name=theme-color]').setAttribute('content', view || !reader.hidden ? th.bg : '#FF8A00');
+  if (view || !reader.hidden) androidBg(th.bg);
 }
 function buildSwatches() {
   $('#themeSwatches').innerHTML = Object.entries(THEMES).map(([k, t]) =>
@@ -986,7 +996,7 @@ async function init() {
   await loadLibrary();
   if (!getDevice()) askDevice();
   await handleShare();
-  if (android) window.aoCheckFiles();
+  if (android) { androidBg(cssToHex(getComputedStyle(document.body).backgroundColor)); window.aoCheckFiles(); }
   if (location.hash === '#lesen') history.replaceState(null, '', location.pathname + location.search);
 }
 init();
