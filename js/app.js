@@ -4,7 +4,7 @@ import { openZip, writeZip } from './zip.js';
 import { EpubView, epubMeta, THEMES } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
 
-const VERSION = '1.5.0';
+const VERSION = '1.5.1';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -70,8 +70,12 @@ $('#scrim').addEventListener('click', () => {
 const PANEL_TITLES = { toc: 'Inhalt', search: 'Suche', marks: 'Lesezeichen', type: 'Schrift & Bilder', theme: 'Farben & Helligkeit', settings: 'Einstellungen' };
 let curPanel = null;
 // Leiste links blendet sich beim Lesen aus
-let railT = null, openedAt = 0;
-function setRail(show) { document.body.classList.toggle('rail-hidden', !show); }
+let railT = null, openedAt = 0, lastScrub = 0;
+function setRail(show) {
+  document.body.classList.toggle('rail-hidden', !show);
+  const r = document.getElementById('reader');
+  if (r) r.classList.toggle('ui-hidden', !show);
+}
 function scheduleRailHide(ms) {
   clearTimeout(railT);
   railT = setTimeout(() => { if (view && !curPanel && !openLayers.length) setRail(false); }, ms);
@@ -342,6 +346,7 @@ $('#backupInput').addEventListener('change', async (e) => { const f = e.target.f
 // ---------------- Android-App (APK): Brücke zur nativen Hülle ----------------
 const android = window.AoAndroid || null;
 if (android) document.documentElement.classList.add('in-apk');
+if (!android && !(document.fullscreenEnabled || document.webkitFullscreenEnabled)) document.documentElement.classList.add('no-fs');
 function readAsArrayBuffer(blob) {
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsArrayBuffer(blob); });
 }
@@ -527,7 +532,7 @@ async function openBook(id) {
   updateWakeLock();
   syncSettingsUi();
   try {
-    if (!localStorage.getItem('sr-hint-aa')) { localStorage.setItem('sr-hint-aa', '1'); toast('Tipp: Menüleiste links und Kopfleiste verschwinden beim Umblättern. Zurückholen: in die Bildmitte tippen.', 7000); }
+    if (!localStorage.getItem('sr-hint-aa')) { localStorage.setItem('sr-hint-aa', '1'); toast('Tipp: Beim Umblättern verschwinden alle Leisten. Zurückholen: in die Bildmitte tippen.', 7000); }
   } catch {}
 }
 
@@ -586,7 +591,7 @@ buildSwatches();
 let saveT;
 function onRelocate() {
   if (!view) return;
-  if (!curPanel && Date.now() - openedAt > 1500) { clearTimeout(railT); setRail(false); }
+  if (!curPanel && Date.now() - openedAt > 1500 && Date.now() - lastScrub > 2500) { clearTimeout(railT); setRail(false); }
   const inf = view.info();
   $('#rChapter').textContent = inf.chapter && inf.chapter !== cur.title ? inf.chapter : (cur.author || '');
   $('#miniTitle').textContent = cur.type === 'pdf' ? cur.title : inf.chapter;
@@ -619,7 +624,6 @@ function toggleUi() {
   if (openLayers.includes('dict')) { closeLayer('dict'); return; }
   const hidden = reader.classList.contains('ui-hidden') || document.body.classList.contains('rail-hidden');
   clearTimeout(railT);
-  reader.classList.toggle('ui-hidden', !hidden);
   setRail(hidden);
 }
 $('#btnRail').addEventListener('click', () => {
@@ -671,7 +675,7 @@ function showBubble() {
   b.style.left = Math.max(half - 40, Math.min(pr.width - half + 40, x)) + 'px';
   scrub.style.setProperty('--p', p * 100 + '%');
 }
-scrub.addEventListener('pointerdown', () => { scrubbing = true; });
+scrub.addEventListener('pointerdown', () => { scrubbing = true; lastScrub = Date.now(); clearTimeout(railT); });
 scrub.addEventListener('input', () => { scrubbing = true; if (view) showBubble(); });
 const endScrub = async () => {
   if (!scrubbing) return;

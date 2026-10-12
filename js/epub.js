@@ -316,7 +316,7 @@ export class EpubView {
     const mm = { s: 12, m: Math.max(20, W * 0.04), l: Math.max(36, W * 0.08) };
     let m = Math.round(mm[this.s.margin] || mm.m);
     if (cols === 1 && W - 2 * m > 780) m = Math.round((W - 780) / 2);
-    const pt = 10, pb = 10;
+    const pt = 6, pb = 4;
     return { W, H, cols, m, pt, pb, cw: (W - 2 * m * cols) / cols, chh: H - pt - pb };
   }
 
