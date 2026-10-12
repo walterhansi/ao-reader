@@ -1,0 +1,54 @@
+name: Android-APK bauen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: APK bauen
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          set -o pipefail
+          gradle -p android assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
+          cp android/app/build/outputs/apk/release/app-release.apk ao-reader.apk
+
+      - name: Als Download bereitstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view apk >/dev/null 2>&1 || gh release create apk --title "ao Reader – Android-App" --notes "Android-App (APK) für ao Reader. Herunterladen, Installation aus unbekannten Quellen erlauben, installieren."
+          gh release upload apk ao-reader.apk --clobber
+
+      - name: Bau-Protokoll bei Fehler sichern
+        if: failure()
+        run: |
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git checkout --orphan ci-log
+          git rm -rf --cached . >/dev/null
+          tail -n 300 build.log > ci-build.log || echo "kein Protokoll" > ci-build.log
+          git add ci-build.log
+          git commit -m "Bau-Protokoll ${{ github.run_number }}"
+          git push -f origin ci-log

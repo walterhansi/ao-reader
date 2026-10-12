@@ -285,6 +285,12 @@ body.reading.rail-hidden .r-top{transform:translateY(-110%);opacity:0;pointer-ev
 .brand-name{font-family:Georgia,"Iowan Old Style",serif;font-weight:700}
 .hero-logo{display:block;margin-bottom:10px;filter:drop-shadow(0 4px 10px rgba(228,111,0,.25))}
 .eyebrow{color:#E46F00}
+.menu a.apk-link{width:100%;display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:12px;text-decoration:none;color:inherit}
+.menu a.apk-link:hover{background:var(--surface-2)}
+.menu a.apk-link span{display:flex;flex-direction:column}
+.menu a.apk-link small{color:var(--muted);font-size:.8rem}
+.menu a.apk-link svg{color:var(--accent)}
+.in-apk .apk-link{display:none!important}
 /* E-Ink: keine Animationen, keine Schatten/Transparenz, harte Kontraste */
 body.eink *,body.eink *::before,body.eink *::after{animation:none!important;transition:none!important;backdrop-filter:none!important;box-shadow:none!important;text-shadow:none!important}
 body.eink{--muted:#333;--line:#000;--accent:#000;--accent-soft:#ddd;--surface-2:#eee}

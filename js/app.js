@@ -1,9 +1,10 @@
+import './compat.js';
 import { db } from './db.js';
 import { openZip, writeZip } from './zip.js';
 import { EpubView, epubMeta, THEMES } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
 
-const VERSION = '1.4.1';
+const VERSION = '1.5.0';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -338,7 +339,68 @@ $('#mExportAll').addEventListener('click', () => exportBackup(true));
 $('#mImport').addEventListener('click', () => $('#backupInput').click());
 $('#backupInput').addEventListener('change', async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) await importBackup(f); });
 
+// ---------------- Android-App (APK): Brücke zur nativen Hülle ----------------
+const android = window.AoAndroid || null;
+if (android) document.documentElement.classList.add('in-apk');
+function readAsArrayBuffer(blob) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsArrayBuffer(blob); });
+}
+function bytesToB64(u8) {
+  let s = '';
+  for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function b64ToBytes(b64) {
+  const s = atob(b64); const u8 = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) u8[i] = s.charCodeAt(i);
+  return u8;
+}
+async function androidSave(blob, name) {
+  const id = android.beginFile(name, blob.type || 'application/octet-stream');
+  if (!id) { toast('Speichern nicht möglich.'); return; }
+  const CH = 384 * 1024;
+  for (let o = 0; o < blob.size; o += CH) {
+    const part = new Uint8Array(await readAsArrayBuffer(blob.slice(o, o + CH)));
+    if (!android.appendChunk(id, bytesToB64(part))) { toast('Speichern fehlgeschlagen.'); return; }
+  }
+  android.finishFile(id);
+}
+// vom Gerät per „Öffnen mit“ / „Teilen“ übergebene Dateien holen
+window.aoCheckFiles = async () => {
+  if (!android) return;
+  let list = [];
+  try { list = JSON.parse(android.pendingFiles() || '[]'); } catch { list = []; }
+  if (!list.length) return;
+  const files = [];
+  for (const f of list) {
+    const parts = [];
+    for (;;) { const c = android.readChunk(f.id); if (!c) break; parts.push(b64ToBytes(c)); }
+    let type = f.type || '';
+    if (!type || type === 'application/octet-stream') type = /\.pdf$/i.test(f.name) ? 'application/pdf' : /\.epub$/i.test(f.name) ? 'application/epub+zip' : '';
+    let name = f.name || 'buch';
+    if (!/\.(epub|pdf)$/i.test(name)) name += type === 'application/pdf' ? '.pdf' : '.epub';
+    files.push(new File(parts, name, { type }));
+  }
+  if (view) await closeReader();
+  importFiles(files, true);
+};
+window.aoNext = () => { if (view && $('#lightbox').hidden) view.next(); };
+window.aoPrev = () => { if (view && $('#lightbox').hidden) view.prev(); };
+window.aoPause = () => { savePosNow(); };
+window.aoBack = () => {
+  if (!$('#lightbox').hidden) { closeLightbox(); return true; }
+  if (openLayers.length) {
+    const top = openLayers[openLayers.length - 1];
+    if (top !== 'deviceSheet') closeLayer(top);
+    return true;
+  }
+  if (curPanel) { closePanel(); return true; }
+  if (view) { if (location.hash === '#lesen') history.back(); else closeReader(); return true; }
+  return false;
+};
+
 function download(blob, name) {
+  if (android) { androidSave(blob, name); return; }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
@@ -358,7 +420,7 @@ async function exportBackup(withBooks) {
   const dev = fileSafe(getDevice());
   if (!withBooks) {
     download(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), `ao-reader-backup-${dev}-${day}.json`);
-    toast('Backup gespeichert (Downloads).');
+    if (!android) toast('Backup gespeichert (Downloads).');
     return;
   }
   toast('Backup wird erstellt …', 60000);
@@ -368,7 +430,7 @@ async function exportBackup(withBooks) {
     if (blob) files.push({ name: `books/${b.id}.${b.type}`, data: new Uint8Array(await blob.arrayBuffer()) });
   }
   download(writeZip(files), `ao-reader-komplett-${dev}-${day}.zip`);
-  toast(`Backup mit ${allBooks.length} Büchern gespeichert (Downloads).`, 4000);
+  toast(android ? 'Bitte Speicherort wählen …' : `Backup mit ${allBooks.length} Büchern gespeichert (Downloads).`, 4000);
 }
 
 async function importBackup(file) {
@@ -431,6 +493,7 @@ async function openBook(id) {
   $('#library').hidden = true;
   reader.hidden = false;
   document.body.classList.add('reading');
+  if (android) android.setReading(true);
   document.body.classList.toggle('reader-pdf', book.type === 'pdf');
   document.body.classList.toggle('reader-epub', book.type === 'epub');
   reader.classList.remove('ui-hidden');
@@ -478,6 +541,7 @@ async function closeReader() {
   reader.hidden = true;
   clearTimeout(railT); setRail(true);
   document.body.classList.remove('reader-epub', 'reader-pdf', 'reading');
+  if (android) { android.setReading(false); android.keepScreenOn(false); }
   if (['toc', 'search', 'marks'].includes(curPanel)) closePanel();
   $('#searchList').innerHTML = ''; $('#searchStatus').textContent = ''; $('#searchInput').value = '';
   $('#library').hidden = false;
@@ -764,6 +828,7 @@ $('#pdfZoomStepper').addEventListener('click', (e) => { const b = e.target.close
 
 // Bildschirm anlassen
 async function updateWakeLock() {
+  if (android) { android.keepScreenOn(!!(settings.keepAwake && view)); return; }
   if (!settings.keepAwake || !view) return releaseWakeLock();
   try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch {}
 }
@@ -917,6 +982,7 @@ async function init() {
   await loadLibrary();
   if (!getDevice()) askDevice();
   await handleShare();
+  if (android) window.aoCheckFiles();
   if (location.hash === '#lesen') history.replaceState(null, '', location.pathname + location.search);
 }
 init();

@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'io.github.walterhansi.aoreader'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'io.github.walterhansi.aoreader'
+        minSdk 21
+        targetSdk 34
+        versionCode((System.getenv('VERSION_CODE') ?: '1') as int)
+        versionName '1.0.' + (System.getenv('VERSION_CODE') ?: '0')
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('aoreader.jks')
+            storePassword 'aoreader-apk'
+            keyAlias 'aoreader'
+            keyPassword 'aoreader-apk'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
