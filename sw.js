@@ -1,8 +1,8 @@
 // Service Worker: offline-fähig + Empfang geteilter Dateien (Android „Teilen“)
-const CACHE = 'ao-reader-v1.5.4';
+const CACHE = 'ao-reader-v1.6.0';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
-  './js/app.js', './js/compat.js', './js/db.js', './js/zip.js', './js/epub.js', './js/pdf.js',
+  './js/app.js', './js/compat.js', './js/dict.js', './js/db.js', './js/zip.js', './js/epub.js', './js/pdf.js',
   './lib/pdfjs/pdf.js', './lib/pdfjs/pdf.worker.js', './lib/pdfjs2/pdf.js', './lib/pdfjs2/pdf.worker.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
 ];
@@ -41,6 +41,8 @@ self.addEventListener('fetch', (e) => {
   }
 
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Wörterbuch-Daten nicht doppelt im Cache ablegen (landen in der eigenen Datenbank)
+  if (url.pathname.indexOf('/dict/') >= 0) return;
 
   // Seitenaufrufe: App-Hülle aus dem Cache
   if (e.request.mode === 'navigate') {

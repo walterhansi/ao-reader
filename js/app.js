@@ -3,8 +3,9 @@ import { db } from './db.js';
 import { openZip, writeZip } from './zip.js';
 import { EpubView, epubMeta, THEMES } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
+import { dictInstalled, dictMeta, dictInstall, dictRemove, dictLookup } from './dict.js';
 
-const VERSION = '1.5.4';
+const VERSION = '1.6.0';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -329,7 +330,32 @@ $('#deviceForm').addEventListener('submit', (e) => { e.preventDefault(); setDevi
 $('#mDevice').addEventListener('click', () => askDevice());
 
 // ---------------- Menü & Backup ----------------
+function refreshDictUi() {
+  const m = dictInstalled() ? dictMeta() : null;
+  $('#dictInfo').textContent = m ? `Installiert: ${Number(m.keys || 0).toLocaleString('de-DE')} Stichwörter` : 'Englisch → Deutsch für englische Bücher';
+  $('#dictBtn').textContent = m ? 'Entfernen' : 'Herunterladen';
+}
+let dictBusy = false;
+$('#dictBtn').addEventListener('click', async () => {
+  if (dictBusy) return;
+  if (dictInstalled()) {
+    if (!confirm('Offline-Wörterbuch von diesem Gerät entfernen?')) return;
+    await dictRemove(); refreshDictUi(); refreshAbout(); toast('Wörterbuch entfernt.'); return;
+  }
+  if (!navigator.onLine) { toast('Zum Herunterladen wird Internet benötigt.'); return; }
+  dictBusy = true; $('#dictBtn').disabled = true;
+  try {
+    await dictInstall((msg) => { $('#dictInfo').textContent = msg; });
+    toast('Wörterbuch bereit. Wort im Buch markieren zum Übersetzen.', 4000);
+  } catch (e) {
+    await dictRemove().catch(() => {});
+    toast('Wörterbuch: ' + (e && e.message ? e.message : 'Fehler'), 5000);
+  }
+  dictBusy = false; $('#dictBtn').disabled = false;
+  refreshDictUi(); refreshAbout();
+});
 async function refreshAbout() {
+  refreshDictUi();
   $('#appVersion').textContent = VERSION + ' · ' + browserInfo();
   $('#deviceName').textContent = getDevice() || '–';
   try {
@@ -859,9 +885,24 @@ function onSelect(text) {
   dictText = text;
   $('#dictWord').textContent = text.length > 60 ? text.slice(0, 60) + '…' : text;
   $('#dictBody').textContent = '';
+  $('#dictBody').classList.remove('offline');
   openLayer('dict');
   const words = text.split(/\s+/).length;
-  if (words <= 4) lookupWikipedia(text);
+  // Offline-Wörterbuch nur, wenn auf diesem Gerät heruntergeladen (sonst wie bisher)
+  if (dictInstalled() && words <= 6 && bookLang() !== 'de') lookupOffline(text, words);
+  else if (words <= 4) lookupWikipedia(text);
+}
+function escHtml(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+async function lookupOffline(text, words) {
+  const req = ++dictReq;
+  let rows = [];
+  try { rows = await dictLookup(text); } catch (e) { console.warn('Wörterbuch', e); }
+  if (req !== dictReq) return;
+  if (!rows.length) { if (words <= 4) lookupWikipedia(text); return; }
+  const body = $('#dictBody');
+  body.classList.add('offline');
+  body.innerHTML = rows.map((r) => `<div class="dict-row"><b>${escHtml(r.en)}</b> <span>${escHtml(r.de)}</span></div>`).join('');
+  body.scrollTop = 0;
 }
 document.addEventListener('selectionchange', () => {
   if (!view || cur.type !== 'pdf') return;

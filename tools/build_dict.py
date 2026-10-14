@@ -13,7 +13,8 @@ MAX_WORDS = 6        # längere englische Wendungen weglassen
 MAX_DE = 180         # deutsche Übersetzung kürzen
 MAX_PER_KEY = 14     # Einträge je Stichwort
 
-ANNOT = re.compile(r'\{[^}]*\}|\[[^\]]*\]|<[^>]*>')
+ANNOT = re.compile(r'\{[^}]*\}|\[[^\]]*\]|<[^>]*>|/[^/\s][^/]*/')
+ABBR = re.compile(r'/([^/\s][^/]*)/')
 PAREN = re.compile(r'\([^)]*\)')
 SPACES = re.compile(r'\s+')
 
@@ -42,6 +43,22 @@ def key_of(term):
     return k
 
 
+def keys_of(term):
+    """Hauptschlüssel, Abkürzungen (/Lt./) und Variante ohne Bindestrich."""
+    out = []
+    k = key_of(term)
+    if k: out.append(k)
+    for a in ABBR.findall(term):
+        for part in a.split('/'):
+            ak = key_of(part)
+            if ak and ak not in out: out.append(ak)
+    for x in list(out):
+        if '-' in x:
+            v = x.replace('-', '')
+            if v and v not in out: out.append(v)
+    return out
+
+
 def clean_display(term):
     t = re.sub(r'<[^>]*>', '', term)
     return SPACES.sub(' ', t).strip()
@@ -50,6 +67,17 @@ def clean_display(term):
 def main(src, outdir):
     index = defaultdict(list)
     lines = 0
+    # Eigene Ergänzungen (US-Krimi-Slang) zuerst, damit sie oben stehen
+    extra = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'slang-en-de.tsv')
+    if os.path.exists(extra):
+        with open(extra, encoding='utf-8') as f:
+            for line in f:
+                line = line.rstrip('\n')
+                if not line or line.startswith('#') or '\t' not in line: continue
+                en, de = line.split('\t', 1)
+                for term in split_top(en, '; '):
+                    for k in keys_of(term):
+                        index[k].append((clean_display(term), de.strip()))
     with open(src, encoding='utf-8', errors='replace') as f:
         for line in f:
             line = line.rstrip('\n')
@@ -63,10 +91,10 @@ def main(src, outdir):
                 if not de_txt: continue
                 if len(de_txt) > MAX_DE: de_txt = de_txt[:MAX_DE - 1].rstrip() + '…'
                 for term in split_top(en_sub, '; '):
-                    k = key_of(term)
-                    if not k or len(k.split(' ')) > MAX_WORDS: continue
-                    if not re.match(r"[a-z0-9]", k): continue
-                    index[k].append((clean_display(term), de_txt))
+                    for k in keys_of(term):
+                        if len(k.split(' ')) > MAX_WORDS: continue
+                        if not re.match(r"[a-z0-9]", k): continue
+                        index[k].append((clean_display(term), de_txt))
 
     shards = defaultdict(list)
     entries = 0

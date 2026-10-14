@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'tools/build_dict.py'
+      - 'tools/slang-en-de.tsv'
       - '.github/workflows/dict.yml'
   workflow_dispatch:
 

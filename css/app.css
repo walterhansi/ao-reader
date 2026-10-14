@@ -197,6 +197,14 @@ input,select{font:inherit;color:inherit}
 .dict-head strong{font-family:var(--serif);font-size:1.08rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dict-body{font-size:.86rem;color:var(--muted);margin:4px 0 10px;max-height:28vh;overflow:auto;line-height:1.45}
 .dict-body:empty{display:none}
+.dict-body.offline{color:var(--text);font-size:.92rem;max-height:34vh}
+.dict-row{padding:3px 0;border-bottom:1px solid var(--line)}
+.dict-row:last-child{border-bottom:0}
+.dict-row b{font-weight:650}
+.dict-row span{color:var(--muted)}
+.dict-setup{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.88rem}
+.btn.sm{padding:6px 12px;font-size:.84rem;flex:none}
+.btn:disabled{opacity:.5}
 .dict-actions{display:flex;flex-wrap:wrap;gap:6px}
 .dict-actions button{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:6px 12px;font-size:.82rem;font-weight:600}
 .dict-actions svg{width:16px;height:16px}
