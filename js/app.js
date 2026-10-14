@@ -4,7 +4,7 @@ import { openZip, writeZip } from './zip.js';
 import { EpubView, epubMeta, THEMES } from './epub.js';
 import { PdfView, pdfMeta } from './pdf.js';
 
-const VERSION = '1.5.3';
+const VERSION = '1.5.4';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -577,6 +577,8 @@ function applyTheme() {
   reader.classList.toggle('is-dark', th.dark);
   const v = {
     '--r-bg': th.bg, '--r-fg': th.fg, '--r-bar': th.bg + 'f7', '--r-line': mixHex(th.bg, th.fg, 0.15), '--r-muted': mixHex(th.bg, th.fg, 0.6),
+    // Schieberegler: im E-Ink-Modus Textfarbe, sonst Akzent passend zu hell/dunkel – immer kontrastreich zum Hintergrund
+    '--r-knob': settings.eink ? th.fg : (th.dark ? '#5fb8b0' : '#1f6f6b'),
   };
   for (const [k, val] of Object.entries(v)) reader.style.setProperty(k, val);
   reader.style.colorScheme = th.dark ? 'dark' : 'light';
@@ -798,7 +800,7 @@ function syncSettingsUi() {
   $('#targetLang').value = settings.targetLang;
   if (view && cur && cur.type === 'pdf') $('#pdfZoomOut').textContent = view.percentZoom + ' %';
 }
-function applyEink() { document.body.classList.toggle('eink', !!settings.eink); }
+function applyEink() { document.body.classList.toggle('eink', !!settings.eink); applyTheme(); }
 function changed(key) {
   saveSettings(); syncSettingsUi();
   if (key === 'eink') applyEink();
