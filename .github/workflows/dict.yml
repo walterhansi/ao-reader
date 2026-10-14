@@ -1,0 +1,65 @@
+name: Offline-Wörterbuch bauen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/build_dict.py'
+      - '.github/workflows/dict.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ding-Wörterbuch laden
+        run: |
+          set -o pipefail
+          {
+            for u in https://ftp.tu-chemnitz.de/pub/Local/urz/ding/de-en/de-en.txt.gz \
+                     http://ftp.tu-chemnitz.de/pub/Local/urz/ding/de-en/de-en.txt.gz; do
+              echo "Versuche $u"
+              if curl -fsSL --retry 3 -o de-en.txt.gz "$u" && gunzip -f de-en.txt.gz; then break; fi
+            done
+            if [ ! -s de-en.txt ]; then
+              echo "Fallback: Debian/Ubuntu-Paket trans-de-en"
+              sudo apt-get update -qq
+              apt-get download trans-de-en
+              dpkg -x trans-de-en_*.deb pkg
+              f=$(find pkg -type f -name 'de-en*' | head -1)
+              case "$f" in *.gz) gunzip -c "$f" > de-en.txt ;; *) cp "$f" de-en.txt ;; esac
+            fi
+            ls -l de-en.txt
+            head -3 de-en.txt
+          } 2>&1 | tee build.log
+
+      - name: Aufbereiten
+        run: |
+          set -o pipefail
+          python3 tools/build_dict.py de-en.txt dict 2>&1 | tee -a build.log
+
+      - name: Ins Repo übernehmen
+        run: |
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add dict/en-de.zip dict/meta.json
+          git commit -m "Offline-Wörterbuch aktualisiert" || exit 0
+          for i in 1 2 3; do git pull --rebase -q origin main && git push origin HEAD:main && break; sleep 5; done
+
+      - name: Bau-Protokoll bei Fehler sichern
+        if: failure()
+        run: |
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          cp build.log /tmp/b.log 2>/dev/null || echo "kein Protokoll" > /tmp/b.log
+          git checkout --orphan ci-log
+          git rm -rf --cached . >/dev/null
+          tail -n 300 /tmp/b.log > ci-build.log
+          git add ci-build.log
+          git commit -m "Wörterbuch-Protokoll ${{ github.run_number }}"
+          git push -f origin ci-log
