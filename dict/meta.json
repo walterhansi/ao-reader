@@ -1,0 +1,12 @@
+{
+ "name": "Ding Englisch → Deutsch",
+ "source": "https://dict.tu-chemnitz.de (Frank Richter, TU Chemnitz)",
+ "license": "GNU GPL v2 oder neuer",
+ "built": "2026-10-14",
+ "lines": 205389,
+ "keys": 402878,
+ "entries": 496978,
+ "shards": 473,
+ "bytes": 9417674,
+ "raw": 34460390
+}
