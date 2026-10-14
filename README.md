@@ -32,7 +32,11 @@ Nach Änderungen an Dateien in `sw.js` die Zeile `const CACHE = 'ao-reader-v…'
 
 ## Technik
 
-Reines HTML/CSS/JavaScript ohne Build-Schritt. EPUB-Darstellung ist eine eigene, schlanke Umsetzung (ZIP-Entpacken über die Browser-Funktion `DecompressionStream`).
-PDF über [pdf.js](https://mozilla.github.io/pdf.js/) 3.11.174 (Mozilla, Apache-2.0, Lizenz in `lib/pdfjs/LICENSE`).
+Reines HTML/CSS/JavaScript ohne Build-Schritt. EPUB-Darstellung ist eine eigene, schlanke Umsetzung (ZIP-Entpacken über `DecompressionStream`, auf älteren Browsern über einen eigenen DEFLATE-Entpacker).
+PDF über [pdf.js](https://mozilla.github.io/pdf.js/) 3.11.174 (Mozilla, Apache-2.0, Lizenz in `lib/pdfjs/LICENSE`). Läuft 3.11 nicht (ältere WebViews, z. B. E-Book-Reader), springt automatisch pdf.js 2.16 legacy (`lib/pdfjs2`) ein.
+
+**Android-App:** `android/` ist eine schlanke WebView-Hülle (minSdk 21), die die Web-App lädt und offline cacht. Sie ergänzt Blättern mit den Lautstärketasten, Zurück-Taste, „Öffnen mit“/Teilen, Backup speichern und Vollbild. Gebaut wird per GitHub Actions (`.github/workflows/android.yml`), Download: [ao-reader.apk](https://github.com/walterhansi/ao-reader/releases/download/apk/ao-reader.apk).
+
+**Offline-Wörterbuch Englisch → Deutsch (optional):** In den Einstellungen herunterladbar (ca. 10 MB), danach wird ein markiertes Wort in englischen Büchern ohne Internet übersetzt, inklusive Grundformen (ratted → rat). Ohne Download wird nichts geladen. Daten: [Ding](https://dict.tu-chemnitz.de) von Frank Richter, TU Chemnitz (GNU GPL v2+), ergänzt um US-Krimi-Slang (`tools/slang-en-de.tsv`). Aufbereitung: `tools/build_dict.py` per GitHub Actions (`.github/workflows/dict.yml`) nach `dict/`.
 Daten liegen in IndexedDB des Browsers. Empfohlen: aktuelles Chrome/Edge (Android, ChromeOS, Windows).
 DRM-geschützte Bücher (z. B. Adobe DRM, Kindle) können nicht geöffnet werden.
